@@ -7,6 +7,8 @@
 
 #include <iostream>
 
+#define assert_throw(x) if (!(x)) throw std::runtime_error("died line " + std::to_string(__LINE__));
+
 static const std::size_t ContainerSize = std::size_t(1000000);
 static const char alpha[] = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
 
@@ -88,6 +90,26 @@ std::vector<A> build()
 	return va;
 }
 
+int foo()
+{
+	std::vector<int> va = {1000, 2, 10, 9, 4, 3, 20, 40, 0, 5, 100};
+	std::vector<size_t> vi(va.size());
+	std::iota(vi.begin(), vi.end(), 0);
+
+	std::partial_sort(vi.begin(), vi.begin() + vi.size() / 2, vi.end(),
+					  [&va](size_t i1, size_t i2)
+	{
+		return va[i1] < va[i2];
+	});
+
+	for (std::size_t i = 0; i < vi.size(); ++i)
+	{
+		std::cout << vi[i] << " => " << va[vi[i]] << std::endl;
+	}
+
+	return 0;
+}
+
 int main(int argc, char** argv)
 {
 	if (argc != 2)
@@ -96,38 +118,86 @@ int main(int argc, char** argv)
 		return 1;
 	}
 
+	//return foo();
+
 	static std::ptrdiff_t K = 1000;
 	std::vector<A> va = build();
 
 	const std::string argv0(argv[1]);
 	if (argv0 == "sort")
 	{
-		run_benchmark("sort", [&]()
+		run_benchmark(argv0, [&]()
 		{
 			std::sort(va.begin(), va.end());
 		});
 	}
 	else if (argv0 == "partial_sort")
 	{
-		run_benchmark("partial_sort", [&]()
+		run_benchmark(argv0, [&]()
 		{
 			std::partial_sort(va.begin(), va.begin() + K, va.end());
 		});
 
-		for (int i = 0; i < 100; ++i)
+		for (std::size_t i = 0; i < 100; ++i)
+		{
 			std::cout << va[i].x << " ";
+			assert_throw(va[i].x < va[i + 1].x);
+		}
 		std::cout << std::endl;
 	}
 	else if (argv0 == "quickselsort")
 	{
-		run_benchmark("quickselsort", [&]()
+		run_benchmark(argv0, [&]()
 		{
 			std::nth_element(va.begin(), va.begin() + K, va.end());
 			std::sort(va.begin(), va.begin() + K);
 		});
 
-		for (int i = 0; i < 100; ++i)
+		for (std::size_t i = 0; i < 100; ++i)
 			std::cout << va[i].x << " ";
+		std::cout << std::endl;
+	}
+	else if (argv0 == "sort_indexes")
+	{
+		std::vector<std::size_t> vi;
+
+		run_benchmark(argv0, [&]()
+		{
+			vi = std::vector<size_t>(va.size());
+			std::iota(vi.begin(), vi.end(), 0);
+
+			std::sort(vi.begin(), vi.end(),
+					  [&va](size_t i1, size_t i2)
+			{
+				return va[i1] < va[i2];
+			});
+		});
+
+		for (std::size_t i = 0; i < 100; ++i)
+			std::cout << va[vi[i]].x << " ";
+		std::cout << std::endl;
+	}
+	else if (argv0 == "partial_sort_indexes")
+	{
+		std::vector<std::size_t> vi;
+		run_benchmark(argv0, [&]()
+		{
+			vi = std::vector<size_t>(va.size());
+			std::iota(vi.begin(), vi.end(), 0);
+
+			std::partial_sort(vi.begin(), vi.begin() + K, vi.end(),
+							  [&va](size_t i1, size_t i2)
+			{
+				return va[i1] < va[i2];
+			});
+		});
+
+		for (std::size_t i = 0; i < 100; ++i)
+		{
+			std::cout << va[vi[i]].x << " ";
+			assert_throw(va[vi[i]].x < va[vi[i + 1]].x);
+		}
+
 		std::cout << std::endl;
 	}
 
