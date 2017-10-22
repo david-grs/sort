@@ -90,6 +90,24 @@ std::vector<A> build()
 	return va;
 }
 
+std::vector<A*> build_ptr()
+{
+	std::vector<A*> va;
+
+	std::random_device rd;
+	auto seed = rd();
+
+	std::mt19937 gen(seed);
+	std::uniform_int_distribution<std::size_t> rng;
+
+	va.reserve(ContainerSize);
+
+	for (std::size_t i = 0; i < ContainerSize; ++i)
+		va.emplace_back(new A([&]() { return rng(gen); }));
+
+	return va;
+}
+
 int foo()
 {
 	std::vector<int> va = {1000, 2, 10, 9, 4, 3, 20, 40, 0, 5, 100};
@@ -121,11 +139,11 @@ int main(int argc, char** argv)
 	//return foo();
 
 	static std::ptrdiff_t K = 1000;
-	std::vector<A> va = build();
 
 	const std::string argv0(argv[1]);
 	if (argv0 == "sort")
 	{
+		std::vector<A> va = build();
 		run_benchmark(argv0, [&]()
 		{
 			std::sort(va.begin(), va.end());
@@ -133,6 +151,7 @@ int main(int argc, char** argv)
 	}
 	else if (argv0 == "partial_sort")
 	{
+		std::vector<A> va = build();
 		run_benchmark(argv0, [&]()
 		{
 			std::partial_sort(va.begin(), va.begin() + K, va.end());
@@ -147,6 +166,7 @@ int main(int argc, char** argv)
 	}
 	else if (argv0 == "quickselsort")
 	{
+		std::vector<A> va = build();
 		run_benchmark(argv0, [&]()
 		{
 			std::nth_element(va.begin(), va.begin() + K, va.end());
@@ -159,6 +179,7 @@ int main(int argc, char** argv)
 	}
 	else if (argv0 == "sort_indexes")
 	{
+		std::vector<A> va = build();
 		std::vector<std::size_t> vi;
 
 		run_benchmark(argv0, [&]()
@@ -179,6 +200,7 @@ int main(int argc, char** argv)
 	}
 	else if (argv0 == "partial_sort_indexes")
 	{
+		std::vector<A> va = build();
 		std::vector<std::size_t> vi;
 		run_benchmark(argv0, [&]()
 		{
@@ -198,6 +220,22 @@ int main(int argc, char** argv)
 			assert_throw(va[vi[i]].x < va[vi[i + 1]].x);
 		}
 
+		std::cout << std::endl;
+	}
+	else if (argv0 == "partial_sort_ptr")
+	{
+		std::vector<A*> va = build_ptr();
+
+		run_benchmark(argv0, [&]()
+		{
+			std::partial_sort(va.begin(), va.begin() + K, va.end(), [](const A* lhs, const A* rhs) { return *lhs < *rhs; });
+		});
+
+		for (std::size_t i = 0; i < 100; ++i)
+		{
+			std::cout << va[i]->x << " ";
+			assert_throw(va[i]->x < va[i + 1]->x);
+		}
 		std::cout << std::endl;
 	}
 
