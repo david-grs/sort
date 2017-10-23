@@ -128,6 +128,35 @@ int foo()
 	return 0;
 }
 
+#include <list>
+#include <unordered_map>
+
+template <typename T>
+struct LRUCache
+{
+	void access(T value)
+	{
+		auto it = mCache.find(value);
+		if (it == mCache.cend())
+		{
+			mItems.push_front(value);
+			mCache.emplace(value, mItems.begin());
+		}
+		else
+		{
+			mItems.erase(it->second);
+
+			mItems.push_front(value);
+			it->second = mItems.begin();
+		}
+	}
+
+	std::list<T> mItems;
+
+	using IteratorT = typename std::list<T>::iterator;
+	std::unordered_map<T, IteratorT> mCache;
+};
+
 int main(int argc, char** argv)
 {
 	if (argc != 2)
@@ -135,8 +164,6 @@ int main(int argc, char** argv)
 		std::cerr << "usage: " << argv[0] << " <sort|partial_sort|quickselsort>" << std::endl;
 		return 1;
 	}
-
-	//return foo();
 
 	static std::ptrdiff_t K = 1000;
 
