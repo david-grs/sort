@@ -151,7 +151,11 @@ struct LRUCache
 		}
 	}
 
-	std::list<T> mItems;
+	std::list<T>//, boost::fast_pool_allocator<T, boost::default_user_allocator_new_delete,
+	//boost::details::pool::null_mutex,
+	//10000,
+	//1500000>>
+	mItems;
 
 	using IteratorT = typename std::list<T>::iterator;
 	google::dense_hash_map<T, IteratorT> mCache;//std::unordered_map<T, IteratorT> mCache;
@@ -291,7 +295,7 @@ int main(int argc, char** argv)
 		auto seed = rd();
 
 		std::mt19937 gen(seed);
-		std::uniform_int_distribution<std::size_t> rng(0, 1000);
+		std::uniform_int_distribution<std::size_t> rng(0, 10000);
 
 		LRUCache<int> cache;
 		cache.mCache.set_empty_key(-1);
