@@ -265,6 +265,24 @@ int main(int argc, char** argv)
 		}
 		std::cout << std::endl;
 	}
+	else if (argv0 == "lru")
+	{
+		std::random_device rd;
+		auto seed = rd();
+
+		std::mt19937 gen(seed);
+		std::uniform_int_distribution<std::size_t> rng;
+
+		LRUCache<int> cache;
+
+		run_benchmark(argv0, [&]()
+		{
+			for (int i = 0; i < 100000; ++i)
+				cache.access(rng(gen));
+		});
+
+		std::cout << cache.mCache.size() << std::endl;
+	}
 
 	return 0;
 }
