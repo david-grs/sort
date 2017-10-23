@@ -14,3 +14,6 @@ set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -O0")
 
 target_compile_options(sort PRIVATE ${cxx_compile_options})
 
+find_package(Boost REQUIRED COMPONENTS system)
+include_directories(${Boost_INCLUDE_DIRS})
+target_link_libraries(sort ${Boost_LIBRARIES})

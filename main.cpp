@@ -131,6 +131,7 @@ int foo()
 #include <list>
 #include <unordered_map>
 #include <google/dense_hash_map>
+#include <boost/pool/pool_alloc.hpp>
 
 template <typename T>
 struct LRUCache
