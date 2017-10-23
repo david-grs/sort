@@ -130,6 +130,7 @@ int foo()
 
 #include <list>
 #include <unordered_map>
+#include <google/dense_hash_map>
 
 template <typename T>
 struct LRUCache
@@ -137,16 +138,14 @@ struct LRUCache
 	void access(T value)
 	{
 		auto it = mCache.find(value);
-		if (it == mCache.cend())
+		if (it == mCache.end())
 		{
 			mItems.push_front(value);
-			mCache.emplace(value, mItems.begin());
+			mCache.insert(std::make_pair(value, mItems.begin()));
 		}
 		else
 		{
-			mItems.erase(it->second);
-
-			mItems.push_front(value);
+			mItems.splice(mItems.begin(), mItems, it->second);
 			it->second = mItems.begin();
 		}
 	}
@@ -154,8 +153,27 @@ struct LRUCache
 	std::list<T> mItems;
 
 	using IteratorT = typename std::list<T>::iterator;
-	std::unordered_map<T, IteratorT> mCache;
+	google::dense_hash_map<T, IteratorT> mCache;//std::unordered_map<T, IteratorT> mCache;
 };
+
+int bar()
+{
+	LRUCache<int> cache;
+	cache.mCache.set_empty_key(-1);
+	cache.mCache.set_deleted_key(-2);
+
+	cache.access(0);
+	cache.access(1);
+	cache.access(2);
+	cache.access(3);
+	cache.access(0);
+	cache.access(0);
+	cache.access(1);
+
+	for (int i : cache.mItems)
+		std::cout << i <<std::endl;
+	return 1;
+}
 
 int main(int argc, char** argv)
 {
@@ -165,6 +183,7 @@ int main(int argc, char** argv)
 		return 1;
 	}
 
+	//return bar();
 	static std::ptrdiff_t K = 1000;
 
 	const std::string argv0(argv[1]);
@@ -271,13 +290,15 @@ int main(int argc, char** argv)
 		auto seed = rd();
 
 		std::mt19937 gen(seed);
-		std::uniform_int_distribution<std::size_t> rng;
+		std::uniform_int_distribution<std::size_t> rng(0, 1000);
 
 		LRUCache<int> cache;
+		cache.mCache.set_empty_key(-1);
+		cache.mCache.set_deleted_key(-2);
 
 		run_benchmark(argv0, [&]()
 		{
-			for (int i = 0; i < 100000; ++i)
+			for (int i = 0; i < 600000; ++i)
 				cache.access(rng(gen));
 		});
 
